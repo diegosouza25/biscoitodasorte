@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Setup - Carga de Frases</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>body{font-family:'Poppins',sans-serif}</style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+    <div class="bg-white p-8 rounded-xl shadow-lg max-w-md w-full text-center border-t-4 border-red-500">
+        <h1 class="text-2xl font-bold text-gray-800 mb-2">🛠️ Área Administrativa</h1>
+        <h2 class="text-lg font-semibold text-red-600 mb-4">Instalador de Frases</h2>
+        
+        <div class="bg-yellow-50 border border-yellow-200 p-3 rounded-lg mb-6 text-left">
+            <p class="text-yellow-800 text-xs font-bold mb-1">⚠️ ATENÇÃO:</p>
+            <p class="text-gray-600 text-xs">Este utilitário <strong>sobrescreve</strong> o banco de dados. Use apenas para manutenção ou carga inicial.</p>
+        </div>
+
+        <div id="status" class="hidden mb-4 p-3 rounded text-sm font-bold"></div>
+
+        <button id="btnInstall" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg transition shadow-md flex justify-center items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/></svg>
+            Enviar Frases (Requer Senha)
+        </button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // --- CONFIGURAÇÃO ---
+        let firebaseConfig;
+        if (typeof __firebase_config !== 'undefined') {
+            firebaseConfig = JSON.parse(__firebase_config);
+        } else {
+            firebaseConfig = {
+                apiKey: "AIzaSyBkOw7D776EunPZoK9SKj55VfFW1lj75Oo",
+                authDomain: "biscoitodasorte-9c0c6.firebaseapp.com",
+                projectId: "biscoitodasorte-9c0c6",
+                storageBucket: "biscoitodasorte-9c0c6.firebasestorage.app",
+                messagingSenderId: "791597345606",
+                appId: "1:791597345606:web:5220a4c13ab24d667ed347"
+            };
+        }
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'meu-site-sorte';
+
+        // --- DADOS ---
+        const DB_DATA = {
+            feliz: [
+                "Sua alegria ilumina o ambiente. Continue brilhando!",
+                "Hoje é um ótimo dia para começar algo novo.",
+                "A felicidade é a melhor maquiagem.",
+                "Celebre as pequenas vitórias.",
+                "O mundo precisa desse seu sorriso.",
+                "Quem planta felicidade, colhe sorrisos.",
+                "Sua energia positiva atrai coisas boas.",
+                "Aproveite este momento, ele é único.",
+                "Compartilhe sua alegria e ela se multiplicará.",
+                "Você é o autor da sua própria felicidade.",
+                "Rir é o melhor remédio para a alma.",
+                "Que a sua felicidade seja contagiante hoje.",
+                "O sol brilha mais forte quando você sorri.",
+                "Agradeça pelo que tem e terá mais motivos para sorrir.",
+                "A felicidade mora nos detalhes.",
+                "Você merece toda a felicidade do mundo.",
+                "Faça do seu sorriso a sua melhor arma.",
+                "A vida é curta demais para não ser feliz.",
+                "Hoje é dia de ser feliz!",
+                "Sua luz interior é capaz de iluminar o mundo.",
+                "A felicidade não é um destino, é uma maneira de viajar.",
+                "Cultive pensamentos felizes.",
+                "Seja a razão do sorriso de alguém hoje.",
+                "A gratidão é a chave para a felicidade.",
+                "Espalhe amor por onde você for.",
+                "Sorria, a vida é bela!",
+                "Você é um imã de milagres.",
+                "Sua vibração positiva move montanhas.",
+                "A felicidade vem de dentro.",
+                "Hoje o dia está a seu favor.",
+                "Permita-se ser feliz sem motivo.",
+                "A alegria é o combustível da alma.",
+                "Você ilumina a vida de quem te rodeia.",
+                "Cada dia é uma nova oportunidade de ser feliz.",
+                "Faça mais do que te faz feliz.",
+                "A vida sorri para quem sorri para ela.",
+                "Você é especial e o mundo sabe disso.",
+                "Sua presença é um presente.",
+                "Abra os braços para as coisas boas.",
+                "O melhor ainda está por vir!"
+            ],
+            triste: [
+                "Isso também passará. Seja forte.",
+                "Dias nublados são necessários para as flores crescerem.",
+                "Não há problema em não estar bem o tempo todo.",
+                "Respire fundo. Amanhã é um novo dia.",
+                "Sua dor de hoje será sua força de amanhã.",
+                "Você é maior que seus problemas.",
+                "O choro pode durar uma noite, mas a alegria vem pela manhã.",
+                "Não desista, você é capaz de superar.",
+                "Tudo tem o seu tempo, tenha paciência.",
+                "Abrace a sua vulnerabilidade, ela te faz humano.",
+                "Encontre conforto nas pequenas coisas.",
+                "Você não está sozinho nessa jornada.",
+                "Acredite, dias melhores virão.",
+                "Seja gentil consigo mesmo hoje.",
+                "Permita-se sentir, mas não se permita desistir.",
+                "A esperança é a última que morre.",
+                "Tudo vai ficar bem, acredite.",
+                "Você é amado e importante.",
+                "A tempestade vai passar e o sol vai brilhar.",
+                "Não perca a fé em si mesmo.",
+                "Suas cicatrizes são marcas de superação.",
+                "Você é mais forte do que imagina.",
+                "Depois da chuva, sempre vem o arco-íris.",
+                "Um dia de cada vez.",
+                "Não se cobre tanto.",
+                "O mundo dá voltas e a sua hora vai chegar.",
+                "Transforme sua dor em aprendizado.",
+                "Você tem uma força interior incrível.",
+                "Não deixe que a tristeza apague seu brilho.",
+                "Olhe para o céu e lembre-se da imensidão da vida.",
+                "Você já superou 100% dos seus dias ruins.",
+                "Acalme seu coração, a paz virá.",
+                "Seja seu próprio melhor amigo agora.",
+                "Lembre-se de quem você é e do que é capaz.",
+                "A vida é feita de ciclos, este vai passar.",
+                "Mantenha a cabeça erguida.",
+                "Você é precioso(a).",
+                "O universo tem planos lindos para você.",
+                "Não tenha medo de recomeçar.",
+                "A cura vem com o tempo e o amor próprio."
+            ],
+            motivado: [
+                "O único limite é aquele que você impõe a si mesmo.",
+                "Foguete não tem ré! Vai com tudo.",
+                "Transforme sonhos em metas.",
+                "O sucesso é a soma de pequenos esforços diários.",
+                "Você não chegou até aqui para desistir agora.",
+                "Acredite no seu potencial ilimitado.",
+                "A persistência é o caminho do êxito.",
+                "Cada passo te aproxima do seu objetivo.",
+                "Não espere por oportunidades, crie-as.",
+                "O futuro pertence àqueles que acreditam na beleza de seus sonhos.",
+                "Seja a mudança que você quer ver no mundo.",
+                "O trabalho duro vence o talento quando o talento não trabalha duro.",
+                "Você é capaz de coisas incríveis.",
+                "Não tenha medo de falhar, tenha medo de não tentar.",
+                "Sua determinação é sua maior força.",
+                "Faça hoje o que seu 'eu' do futuro vai agradecer.",
+                "O sucesso começa fora da sua zona de conforto.",
+                "Sonhe grande e ouse falhar.",
+                "A jornada de mil milhas começa com um único passo.",
+                "Você é o arquiteto do seu próprio destino.",
+                "Seus sonhos não têm data de validade.",
+                "A disciplina é a ponte entre metas e realizações.",
+                "Não pare até se orgulhar de si mesmo.",
+                "Obstáculos são degraus para o sucesso.",
+                "Acredite que você pode, e você já está no meio do caminho.",
+                "Grandes coisas nunca vêm de zonas de conforto.",
+                "O impossível é apenas uma opinião.",
+                "Você é mais forte do que as suas desculpas.",
+                "Concentre-se no progresso, não na perfeição.",
+                "Se você pode sonhar, você pode realizar.",
+                "Não deixe para amanhã o que você pode conquistar hoje.",
+                "Sua única competição é você mesmo.",
+                "Transforme o 'não posso' em 'eu vou'.",
+                "O fracasso é apenas uma oportunidade para recomeçar com mais inteligência.",
+                "Ação é a chave fundamental para todo o sucesso.",
+                "Você nasceu para brilhar.",
+                "Mantenha o foco no objetivo.",
+                "A coragem não é a ausência do medo, é a persistência apesar dele.",
+                "Faça acontecer!",
+                "Seu potencial é infinito."
+            ],
+            cansado: [
+                "Descansar não é desistir. É recarregar.",
+                "Respeite o ritmo do seu corpo hoje.",
+                "Aprenda a dizer não e priorize sua paz.",
+                "Uma mente cansada não toma boas decisões.",
+                "Desconecte para se reconectar.",
+                "O mundo pode esperar enquanto você recarrega as energias.",
+                "Faça uma pausa, respire e relaxe.",
+                "Não se culpe por precisar de descanso.",
+                "Seu bem-estar deve ser sua prioridade.",
+                "Amanhã você tentará de novo com mais força.",
+                "O descanso é parte essencial do sucesso.",
+                "Permita-se parar e apenas ser.",
+                "Recarregue as baterias para voltar mais forte.",
+                "A calma é a chave para a clareza.",
+                "Dê a si mesmo o presente do silêncio.",
+                "Respire fundo e solte o peso dos ombros.",
+                "Tudo flui melhor quando você está descansado.",
+                "A paz interior é o novo sucesso.",
+                "Cuide de você com carinho.",
+                "O descanso renova a alma.",
+                "Às vezes, a coisa mais produtiva a fazer é relaxar.",
+                "Não carregue o mundo nas costas.",
+                "Sua saúde mental importa.",
+                "Durma o sono dos justos.",
+                "Desacelere, não é uma corrida.",
+                "Ouça o que seu corpo está pedindo.",
+                "Você fez o suficiente por hoje.",
+                "Acalme a mente e o coração.",
+                "Um passo de cada vez, no seu tempo.",
+                "Não há pressa, apenas processo.",
+                "Relaxe, nada está sob controle.",
+                "Faça algo que te relaxe hoje.",
+                "A natureza não floresce o ano todo, nem você.",
+                "Respeite seus limites.",
+                "Tire um tempo só para você.",
+                "Desligue o modo 'fazer' e ligue o modo 'ser'.",
+                "A exaustão não é um troféu.",
+                "Se cuide para poder cuidar.",
+                "Hoje, permita-se o ócio criativo.",
+                "Renove suas energias, o amanhã te espera."
+            ],
+            ansioso: [
+                "Um passo de cada vez. Foque no agora.",
+                "Você está seguro. Respire.",
+                "Não sofra pelo futuro, viva o presente.",
+                "Controle o que pode, aceite o que não pode.",
+                "Sua mente está mentindo, você vai conseguir.",
+                "Acalme seu coração, tudo se ajeita.",
+                "Respire fundo, expire a preocupação.",
+                "Você já superou 100% dos seus piores dias.",
+                "O agora é o único momento que existe.",
+                "Confie no processo da vida.",
+                "Não deixe o medo te paralisar.",
+                "Você é mais forte do que a sua ansiedade.",
+                "Encontre a paz no caos.",
+                "Seja gentil com a sua mente.",
+                "A ansiedade não define quem você é.",
+                "Foque na sua respiração e encontre o equilíbrio.",
+                "Tudo vai se resolver da melhor forma.",
+                "Acalme-se, você está fazendo o seu melhor.",
+                "Liberte-se da necessidade de controlar tudo.",
+                "A paz começa quando a expectativa termina.",
+                "Não acredite em tudo que você pensa.",
+                "Inspire coragem, expire medo.",
+                "Isso é apenas um momento, não a sua vida toda.",
+                "Você está exatamente onde deveria estar.",
+                "Solte o peso do 'e se'.",
+                "Aterre-se no momento presente.",
+                "Sinta seus pés no chão e respire.",
+                "Você tem recursos para lidar com isso.",
+                "Abrace a incerteza.",
+                "O futuro cuidará de si mesmo.",
+                "Concentre-se naquilo que está ao seu alcance.",
+                "Aquiete a mente e a alma falará.",
+                "Você é suficiente.",
+                "Não antecipe problemas que talvez nunca aconteçam.",
+                "Sua paz vale mais do que qualquer preocupação.",
+                "Dê tempo ao tempo.",
+                "Tudo passa, inclusive essa sensação.",
+                "Confie na sua jornada.",
+                "Você está seguro, aqui e agora.",
+                "Respire. Vai ficar tudo bem."
+            ]
+        };
+
+        const btn = document.getElementById('btnInstall');
+        const status = document.getElementById('status');
+
+        btn.addEventListener('click', async () => {
+            // TRAVA DE SEGURANÇA
+            const password = prompt("🔐 ÁREA RESTRITA \nDigite a senha de administrador para sobrescrever o banco de dados:");
+            
+            // Senha simples 'hardcoded' (pode mudar aqui)
+            if (password !== "lsa142536") {
+                alert("⛔ Senha incorreta! Ação cancelada.");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = "Enviando...";
+            status.className = "hidden";
+
+            try {
+                // CORREÇÃO: Caminho com 6 segmentos (par)
+                // Col: artifacts -> Doc: appId -> Col: public -> Doc: data -> Col: site_content -> Doc: quotes_list
+                const quotesRef = doc(db, 'artifacts', appId, 'public', 'data', 'site_content', 'quotes_list');
+                await setDoc(quotesRef, DB_DATA);
+                
+                status.innerText = "✅ Sucesso! Frases enviadas. Pode fechar este arquivo e abrir o index.html";
+                status.className = "mb-4 p-3 rounded text-sm font-bold bg-green-100 text-green-700 block";
+                btn.innerText = "Instalação Concluída";
+            } catch (error) {
+                console.error(error);
+                status.innerText = "❌ Erro: " + error.code + " - " + error.message;
+                status.className = "mb-4 p-3 rounded text-sm font-bold bg-red-100 text-red-700 block";
+                btn.disabled = false;
+                btn.innerText = "Tentar Novamente";
+            }
+        });
+    </script>
+</body>
+</html>

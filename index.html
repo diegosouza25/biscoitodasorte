@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorte do Dia - Biscoito da Sorte</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Fontes e Ícones -->
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Estilos Personalizados -->
+    <style>
+        body { font-family: 'Poppins', sans-serif; }
+        .quote-font { font-family: 'Lora', serif; }
+        
+        @keyframes crack {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1) rotate(5deg); }
+            100% { transform: scale(0) rotate(-10deg); opacity: 0; }
+        }
+        .cracking { animation: crack 0.8s forwards; }
+        
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .cookie-svg { cursor: pointer; transition: transform 0.3s; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.1)); }
+        .cookie-svg:hover { transform: scale(1.05); }
+    </style>
+</head>
+<body class="bg-amber-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <nav class="w-full p-4 flex justify-between items-center absolute top-0 left-0 z-10">
+        <div class="font-bold text-amber-800 text-lg flex items-center gap-2">
+            <i class="fa-solid fa-cookie-bite"></i> Sorte do Dia
+        </div>
+        <button id="logoutBtn" class="hidden text-sm text-gray-500 hover:text-red-500 bg-white/50 px-3 py-1 rounded-full backdrop-blur-sm transition">
+            <i class="fa-solid fa-right-from-bracket"></i> Trocar Usuário
+        </button>
+    </nav>
+
+    <!-- CONTAINER PRINCIPAL -->
+    <main class="flex-grow flex flex-col items-center justify-center p-4 w-full max-w-4xl mx-auto relative">
+
+        <!-- TELA 1: LOGIN -->
+        <div id="loginScreen" class="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl border-t-4 border-amber-500 hidden">
+            <div class="text-center mb-6">
+                <div class="text-5xl mb-2">🥠</div>
+                <h1 class="text-2xl font-bold text-amber-900">Bem-vindo(a)</h1>
+                <p class="text-gray-500 text-sm">Digite seu nome para ver sua sorte.</p>
+            </div>
+            
+            <div id="authError" class="hidden bg-red-100 text-red-700 p-3 rounded mb-4 text-sm text-center"></div>
+
+            <form id="authForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Seu Nome</label>
+                    <input type="text" id="userName" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none uppercase" placeholder="EX: JOÃO SILVA">
+                </div>
+                
+                <button type="submit" id="authBtn" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 rounded-lg transition shadow-lg">
+                    Entrar
+                </button>
+            </form>
+        </div>
+
+        <!-- TELA 2: EMOÇÃO -->
+        <div id="emotionScreen" class="hidden w-full text-center fade-in">
+            <h2 class="text-3xl font-bold text-amber-900 mb-2">Olá, <span id="displayUserName" class="capitalize">...</span>!</h2>
+            <p class="text-gray-600 text-lg mb-8">Para tirar sua sorte, responda:<br/><strong>Como você está se sentindo agora?</strong></p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
+                <button onclick="selectEmotion('feliz')" class="p-6 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 rounded-xl shadow-sm hover:shadow-md transition flex flex-col items-center gap-2">
+                    <i class="fa-regular fa-face-smile text-3xl"></i> <span class="font-bold">Feliz</span>
+                </button>
+                <button onclick="selectEmotion('triste')" class="p-6 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-xl shadow-sm hover:shadow-md transition flex flex-col items-center gap-2">
+                    <i class="fa-regular fa-face-sad-tear text-3xl"></i> <span class="font-bold">Triste</span>
+                </button>
+                <button onclick="selectEmotion('motivado')" class="p-6 bg-red-100 hover:bg-red-200 text-red-800 rounded-xl shadow-sm hover:shadow-md transition flex flex-col items-center gap-2">
+                    <i class="fa-solid fa-bolt text-3xl"></i> <span class="font-bold">Motivado</span>
+                </button>
+                <button onclick="selectEmotion('cansado')" class="p-6 bg-stone-100 hover:bg-stone-200 text-stone-800 rounded-xl shadow-sm hover:shadow-md transition flex flex-col items-center gap-2">
+                    <i class="fa-solid fa-mug-hot text-3xl"></i> <span class="font-bold">Cansado</span>
+                </button>
+                <button onclick="selectEmotion('ansioso')" class="p-6 bg-purple-100 hover:bg-purple-200 text-purple-800 rounded-xl shadow-sm hover:shadow-md transition flex flex-col items-center gap-2">
+                    <i class="fa-solid fa-heart-pulse text-3xl"></i> <span class="font-bold">Ansioso</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- TELA 3: BISCOITO -->
+        <div id="cookieScreen" class="hidden flex-col items-center justify-center fade-in text-center">
+            <h2 class="text-2xl font-bold text-amber-900 mb-8 animate-pulse">Toque no biscoito para abrir</h2>
+            <div id="cookieWrapper" onclick="crackCookie()" class="cookie-svg">
+                <svg width="250" height="250" viewBox="0 0 100 100">
+                    <path d="M10,50 Q50,0 90,50 Q90,90 50,80 Q10,90 10,50" fill="#FCD34D" stroke="#D97706" stroke-width="2" />
+                    <path d="M15,50 Q50,10 85,50" fill="none" stroke="#D97706" stroke-width="1" stroke-dasharray="2 2" />
+                    <circle cx="25" cy="55" r="2" fill="#D97706" />
+                    <circle cx="75" cy="45" r="2" fill="#D97706" />
+                    <circle cx="50" cy="25" r="2" fill="#D97706" />
+                </svg>
+            </div>
+        </div>
+
+        <!-- TELA 4: RESULTADO -->
+        <div id="resultScreen" class="hidden flex-col items-center justify-center w-full fade-in">
+            <div class="bg-white p-8 md:p-12 rounded-lg shadow-2xl max-w-lg w-full text-center border border-amber-100 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-3 bg-amber-500"></div>
+                <span class="inline-block px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-bold uppercase mb-6 tracking-wider">Sua Mensagem</span>
+                <h1 id="quoteText" class="quote-font text-2xl md:text-3xl text-gray-800 italic leading-relaxed mb-8">"..."</h1>
+                <div class="w-16 h-1 bg-amber-200 mx-auto mb-6 rounded-full"></div>
+                <p class="text-gray-400 text-sm mb-4">Volte amanhã para uma nova mensagem.</p>
+                <button id="replayBtn" onclick="resetGame()" class="hidden w-full bg-amber-100 hover:bg-amber-200 text-amber-800 py-3 rounded-lg transition font-semibold mt-4">
+                    <i class="fa-solid fa-rotate-right mr-2"></i> Passaram-se 12h. Jogar de novo?
+                </button>
+            </div>
+        </div>
+
+        <div id="loading" class="fixed inset-0 bg-white/80 z-50 flex items-center justify-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600"></div>
+        </div>
+
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signOut, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, Timestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // --- CONFIGURAÇÃO ---
+        let firebaseConfig;
+        if (typeof __firebase_config !== 'undefined') {
+            firebaseConfig = JSON.parse(__firebase_config);
+        } else {
+            // !!! SUAS CHAVES JÁ CONFIGURADAS !!!
+            firebaseConfig = {
+                apiKey: "AIzaSyBkOw7D776EunPZoK9SKj55VfFW1lj75Oo",
+                authDomain: "biscoitodasorte-9c0c6.firebaseapp.com",
+                projectId: "biscoitodasorte-9c0c6",
+                storageBucket: "biscoitodasorte-9c0c6.firebasestorage.app",
+                messagingSenderId: "791597345606",
+                appId: "1:791597345606:web:5220a4c13ab24d667ed347"
+            };
+        }
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'meu-site-sorte';
+
+        // --- ESTADO GLOBAL ---
+        let currentAuthUser = null; 
+        let currentPlayerName = null; 
+        let selectedEmotion = null;
+
+        const screens = {
+            login: document.getElementById('loginScreen'),
+            emotion: document.getElementById('emotionScreen'),
+            cookie: document.getElementById('cookieScreen'),
+            result: document.getElementById('resultScreen'),
+            loading: document.getElementById('loading')
+        };
+        const authForm = document.getElementById('authForm');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const quoteText = document.getElementById('quoteText');
+        const replayBtn = document.getElementById('replayBtn');
+        const displayUserName = document.getElementById('displayUserName');
+
+        function showScreen(screenName) {
+            Object.values(screens).forEach(el => el.classList.add('hidden'));
+            screens[screenName].classList.remove('hidden');
+            if (screenName === 'login') {
+                logoutBtn.classList.add('hidden');
+            } else {
+                logoutBtn.classList.remove('hidden');
+            }
+        }
+
+        async function checkGameStatus(playerName) {
+            screens.loading.classList.remove('hidden');
+            try {
+                const safeName = playerName.trim().toLowerCase().replace(/\s+/g, '_');
+                // CAMINHO DO USUÁRIO CORRIGIDO PARA TER 6 SEGMENTOS (Collection > Doc > ... > Doc)
+                // Col: artifacts -> Doc: appId -> Col: public -> Doc: data -> Col: players -> Doc: safeName
+                const userRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', safeName);
+                const docSnap = await getDoc(userRef);
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if (!data.lastPlayed) {
+                        showScreen('emotion');
+                        screens.loading.classList.add('hidden');
+                        return;
+                    }
+                    const lastDate = data.lastPlayed.toDate();
+                    const now = new Date();
+                    const isNewDay = lastDate.getDate() !== now.getDate() || 
+                                     lastDate.getMonth() !== now.getMonth() || 
+                                     lastDate.getFullYear() !== now.getFullYear();
+                    const msDiff = now - lastDate;
+                    const hoursDiff = msDiff / (1000 * 60 * 60);
+
+                    if (isNewDay) {
+                        showScreen('emotion');
+                    } else if (hoursDiff >= 12) {
+                        quoteText.innerText = `"${data.lastQuote}"`;
+                        replayBtn.classList.remove('hidden');
+                        showScreen('result');
+                    } else {
+                        quoteText.innerText = `"${data.lastQuote}"`;
+                        replayBtn.classList.add('hidden');
+                        showScreen('result');
+                    }
+                } else {
+                    await setDoc(userRef, { originalName: playerName, createdAt: Timestamp.now(), seenQuotes: [] });
+                    showScreen('emotion');
+                }
+            } catch (error) {
+                console.error(error);
+                let msg = "Erro ao conectar.";
+                if (error.code === 'permission-denied') msg = "Erro de Permissão (Regras do Firebase).";
+                if (error.code === 'invalid-argument') msg = "Erro de Caminho Inválido no Banco.";
+                alert(msg);
+                showScreen('login');
+            }
+            screens.loading.classList.add('hidden');
+        }
+
+        window.resetGame = function() { showScreen('emotion'); };
+        window.selectEmotion = function(emotion) { selectedEmotion = emotion; showScreen('cookie'); };
+        window.crackCookie = async function() {
+            if (!currentPlayerName || !selectedEmotion) return;
+            document.getElementById('cookieWrapper').classList.add('cracking'); 
+            setTimeout(async () => { await processQuote(); }, 800);
+        };
+
+        async function processQuote() {
+            screens.loading.classList.remove('hidden');
+            try {
+                // 1. Busca as frases no Banco (CAMINHO NOVO COM 6 SEGMENTOS)
+                const quotesRef = doc(db, 'artifacts', appId, 'public', 'data', 'site_content', 'quotes_list');
+                const quotesSnap = await getDoc(quotesRef);
+                
+                if (!quotesSnap.exists()) {
+                    alert("ERRO: O Banco de Frases está vazio! Rode o arquivo setup.html primeiro.");
+                    screens.loading.classList.add('hidden');
+                    return;
+                }
+
+                const quotesData = quotesSnap.data();
+                const categoryQuotes = quotesData[selectedEmotion] || [];
+
+                if (categoryQuotes.length === 0) {
+                     alert("ERRO: Nenhuma frase encontrada para esta emoção. Verifique o setup.");
+                     screens.loading.classList.add('hidden');
+                     return;
+                }
+
+                // 2. Busca histórico do usuário
+                const safeName = currentPlayerName.trim().toLowerCase().replace(/\s+/g, '_');
+                const userRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', safeName);
+                const userSnap = await getDoc(userRef);
+                const seenQuotes = userSnap.data()?.seenQuotes || [];
+
+                const availableQuotes = categoryQuotes.filter(q => !seenQuotes.includes(q));
+                let finalQuote = "";
+
+                if (availableQuotes.length === 0) {
+                    finalQuote = categoryQuotes[Math.floor(Math.random() * categoryQuotes.length)];
+                } else {
+                    finalQuote = availableQuotes[Math.floor(Math.random() * availableQuotes.length)];
+                }
+
+                await updateDoc(userRef, {
+                    lastPlayed: Timestamp.now(),
+                    lastQuote: finalQuote,
+                    lastEmotion: selectedEmotion,
+                    seenQuotes: arrayUnion(finalQuote)
+                });
+
+                quoteText.innerText = `"${finalQuote}"`;
+                replayBtn.classList.add('hidden');
+                showScreen('result');
+                document.getElementById('cookieWrapper').classList.remove('cracking');
+
+            } catch (error) {
+                console.error(error);
+                alert("Erro ao processar: " + error.message);
+                showScreen('cookie');
+            }
+            screens.loading.classList.add('hidden');
+        }
+
+        // --- AUTH ---
+        const initAuth = async () => {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                try { await signInWithCustomToken(auth, __initial_auth_token); } catch (e) {}
+            }
+            onAuthStateChanged(auth, (user) => {
+                currentAuthUser = user;
+                if (!user) {
+                    signInAnonymously(auth).catch((error) => console.error("Erro Auth:", error));
+                }
+                showScreen('login');
+                screens.loading.classList.add('hidden');
+            });
+        };
+
+        authForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nameInput = document.getElementById('userName').value;
+            if(nameInput.length < 3) { alert("Digite um nome válido"); return; }
+            
+            document.getElementById('authBtn').disabled = true;
+            document.getElementById('authBtn').innerText = "Entrando...";
+
+            if (!currentAuthUser) {
+                try { await signInAnonymously(auth); } catch(err) {
+                    alert("Erro de conexão com Firebase: " + err.code);
+                    document.getElementById('authBtn').disabled = false;
+                    return;
+                }
+            }
+            currentPlayerName = nameInput;
+            document.getElementById('displayUserName').innerText = currentPlayerName;
+            await checkGameStatus(currentPlayerName);
+            document.getElementById('authBtn').disabled = false;
+            document.getElementById('authBtn').innerText = "Entrar";
+        });
+
+        logoutBtn.addEventListener('click', () => {
+            currentPlayerName = null;
+            document.getElementById('userName').value = "";
+            showScreen('login');
+        });
+
+        initAuth();
+    </script>
+</body>
+</html>

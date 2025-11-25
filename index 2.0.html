@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorte do Dia - Biscoito da Sorte</title>
+    
+    <!-- 1. Tailwind CSS (Visual do site) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 2. Fontes e Ícones -->
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- 3. Estilos Personalizados -->
+    <style>
+        body { font-family: 'Poppins', sans-serif; }
+        .quote-font { font-family: 'Lora', serif; }
+        
+        /* Animações */
+        @keyframes crack {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1) rotate(5deg); }
+            100% { transform: scale(0) rotate(-10deg); opacity: 0; }
+        }
+        .cracking { animation: crack 0.8s forwards; }
+        
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .cookie-svg { cursor: pointer; transition: transform 0.3s; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.1)); }
+        .cookie-svg:hover { transform: scale(1.05); }
+    </style>
+</head>
+<body class="bg-amber-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <nav class="w-full p-4 flex justify-between items-center absolute top-0 left-0 z-10">
+        <div class="font-bold text-amber-800 text-lg flex items-center gap-2">
+            <i class="fa-solid fa-cookie-bite"></i> Sorte do Dia
+        </div>
+        <button id="logoutBtn" class="hidden text-sm text-gray-500 hover:text-red-500 bg-white/50 px-3 py-1 rounded-full backdrop-blur-sm transition">
+            <i class="fa-solid fa-right-from-bracket"></i> Trocar Usuário
+        </button>
+    </nav>
+
+    <!-- CONTAINER PRINCIPAL -->
+    <main class="flex-grow flex flex-col items-center justify-center p-4 w-full max-w-4xl mx-auto relative">
+
+        <!-- TELA 1: LOGIN POR NOME -->
+        <div id="loginScreen" class="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl border-t-4 border-amber-500 hidden">
+            <div class="text-center mb-6">
+                <div class="text-5xl mb-2">🥠</div>
+                <h1 class="text-2xl font-bold text-amber-900">Bem-vindo(a)</h1>
+                <p class="text-gray-500 text-sm">Digite seu nome para ver sua sorte.</p>
+            </div>
+            
+            <div id="authError" class="hidden bg-red-100 text-red-700 p-3 rounded mb-4 text-sm text-center"></div>
+            <div id="offlineBadge" class="hidden bg-yellow-100 text-yellow-800 p-2 rounded mb-4 text-xs text-center font-bold border border-yellow-300">
+                <i class="fa-solid fa-wifi"></i> Modo Offline Ativado
+            </div>
+
+            <form id="authForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Seu Nome</label>
+                    <input type="text" id="userName" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none uppercase" placeholder="EX: JOÃO SILVA">
+                </div>
+                
+                <button type="submit" id="authBtn" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 rounded-lg transition shadow-lg">
+                    Entrar
+                </button>
+            </form>
+            <p class="text-center text-xs text-gray-400 mt-4">
+                Usaremos seu nome para lembrar quais frases você já tirou.
+            </p>
+        </div>
+
+        <!-- TELA 2: PERGUNTA (EMOÇÃO) -->
+        <div id="emotionScreen" class="hidden w-full text-center fade-in">
+            <h2 class="text-3xl font-bold text-amber-900 mb-2">Olá, <span id="displayUserName" class="capitalize">...</span>!</h2>
+            <p class="text-gray-600 text-lg mb-8">Para tirar sua sorte, responda:<br/><strong>Como você está se sentindo agora?</strong></p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
+                <button onclick="selectEmotion('feliz')" class="p-6 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 rounded-xl shadow-sm hover:shadow-md transition flex flex-col items-center gap-2">
+                    <i class="fa-regular fa-face-smile text-3xl"></i> <span class="font-bold">Feliz</span>
+                </button>
+                <button onclick="selectEmotion('triste')" class="p-6 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-xl shadow-sm hover:shadow-md transition flex flex-col items-center gap-2">
+                    <i class="fa-regular fa-face-sad-tear text-3xl"></i> <span class="font-bold">Triste / Bad</span>
+                </button>
+                <button onclick="selectEmotion('motivado')" class="p-6 bg-red-100 hover:bg-red-200 text-red-800 rounded-xl shadow-sm hover:shadow-md transition flex flex-col items-center gap-2">
+                    <i class="fa-solid fa-bolt text-3xl"></i> <span class="font-bold">Motivado</span>
+                </button>
+                <button onclick="selectEmotion('cansado')" class="p-6 bg-stone-100 hover:bg-stone-200 text-stone-800 rounded-xl shadow-sm hover:shadow-md transition flex flex-col items-center gap-2">
+                    <i class="fa-solid fa-mug-hot text-3xl"></i> <span class="font-bold">Cansado</span>
+                </button>
+                <button onclick="selectEmotion('ansioso')" class="p-6 bg-purple-100 hover:bg-purple-200 text-purple-800 rounded-xl shadow-sm hover:shadow-md transition flex flex-col items-center gap-2">
+                    <i class="fa-solid fa-heart-pulse text-3xl"></i> <span class="font-bold">Ansioso</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- TELA 3: BISCOITO (CLIQUE PARA ABRIR) -->
+        <div id="cookieScreen" class="hidden flex-col items-center justify-center fade-in text-center">
+            <h2 class="text-2xl font-bold text-amber-900 mb-8 animate-pulse">Toque no biscoito para abrir</h2>
+            
+            <div id="cookieWrapper" onclick="crackCookie()" class="cookie-svg">
+                <!-- SVG Biscoito -->
+                <svg width="250" height="250" viewBox="0 0 100 100">
+                    <path d="M10,50 Q50,0 90,50 Q90,90 50,80 Q10,90 10,50" fill="#FCD34D" stroke="#D97706" stroke-width="2" />
+                    <path d="M15,50 Q50,10 85,50" fill="none" stroke="#D97706" stroke-width="1" stroke-dasharray="2 2" />
+                    <circle cx="25" cy="55" r="2" fill="#D97706" />
+                    <circle cx="75" cy="45" r="2" fill="#D97706" />
+                    <circle cx="50" cy="25" r="2" fill="#D97706" />
+                </svg>
+            </div>
+            <p class="mt-4 text-gray-400 text-sm">Respire fundo...</p>
+        </div>
+
+        <!-- TELA 4: RESULTADO -->
+        <div id="resultScreen" class="hidden flex-col items-center justify-center w-full fade-in">
+            <div class="bg-white p-8 md:p-12 rounded-lg shadow-2xl max-w-lg w-full text-center border border-amber-100 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-3 bg-amber-500"></div>
+                
+                <span class="inline-block px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-bold uppercase mb-6 tracking-wider">
+                    Sua Mensagem
+                </span>
+
+                <h1 id="quoteText" class="quote-font text-2xl md:text-3xl text-gray-800 italic leading-relaxed mb-8">
+                    "..."
+                </h1>
+
+                <div class="w-16 h-1 bg-amber-200 mx-auto mb-6 rounded-full"></div>
+
+                <p class="text-gray-400 text-sm mb-4">Volte amanhã para uma nova mensagem.</p>
+                
+                <button id="replayBtn" onclick="resetGame()" class="hidden w-full bg-amber-100 hover:bg-amber-200 text-amber-800 py-3 rounded-lg transition font-semibold mt-4">
+                    <i class="fa-solid fa-rotate-right mr-2"></i> Passaram-se 12h. Jogar de novo?
+                </button>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loading" class="fixed inset-0 bg-white/80 z-50 flex items-center justify-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600"></div>
+        </div>
+
+    </main>
+
+    <!-- LÓGICA JAVASCRIPT E FIREBASE -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signOut, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, Timestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // --- CONFIGURAÇÃO DO FIREBASE ---
+        let firebaseConfig;
+        if (typeof __firebase_config !== 'undefined') {
+            firebaseConfig = JSON.parse(__firebase_config);
+        } else {
+            // !!! DADOS DO SEU PROJETO !!!
+            firebaseConfig = {
+                apiKey: "AIzaSyBkOw7D776EunPZoK9SKj55VfFW1lj75Oo",
+                authDomain: "biscoitodasorte-9c0c6.firebaseapp.com",
+                projectId: "biscoitodasorte-9c0c6",
+                storageBucket: "biscoitodasorte-9c0c6.firebasestorage.app",
+                messagingSenderId: "791597345606",
+                appId: "1:791597345606:web:5220a4c13ab24d667ed347"
+            };
+        }
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'meu-site-sorte';
+
+        // --- BANCO DE FRASES (BACKUP LOCAL) ---
+        // Adicionadas 40 frases por categoria (Total: 200 frases)
+        const INITIAL_DB_DATA = {
+            feliz: [
+                "Sua alegria ilumina o ambiente. Continue brilhando!",
+                "Hoje é um ótimo dia para começar algo novo.",
+                "A felicidade é a melhor maquiagem.",
+                "Celebre as pequenas vitórias.",
+                "O mundo precisa desse seu sorriso.",
+                "Quem planta felicidade, colhe sorrisos.",
+                "Sua energia positiva atrai coisas boas.",
+                "Aproveite este momento, ele é único.",
+                "Compartilhe sua alegria e ela se multiplicará.",
+                "Você é o autor da sua própria felicidade.",
+                "Rir é o melhor remédio para a alma.",
+                "Que a sua felicidade seja contagiante hoje.",
+                "O sol brilha mais forte quando você sorri.",
+                "Agradeça pelo que tem e terá mais motivos para sorrir.",
+                "A felicidade mora nos detalhes.",
+                "Você merece toda a felicidade do mundo.",
+                "Faça do seu sorriso a sua melhor arma.",
+                "A vida é curta demais para não ser feliz.",
+                "Hoje é dia de ser feliz!",
+                "Sua luz interior é capaz de iluminar o mundo.",
+                "A felicidade não é um destino, é uma maneira de viajar.",
+                "Cultive pensamentos felizes.",
+                "Seja a razão do sorriso de alguém hoje.",
+                "A gratidão é a chave para a felicidade.",
+                "Espalhe amor por onde você for.",
+                "Sorria, a vida é bela!",
+                "Você é um imã de milagres.",
+                "Sua vibração positiva move montanhas.",
+                "A felicidade vem de dentro.",
+                "Hoje o dia está a seu favor.",
+                "Permita-se ser feliz sem motivo.",
+                "A alegria é o combustível da alma.",
+                "Você ilumina a vida de quem te rodeia.",
+                "Cada dia é uma nova oportunidade de ser feliz.",
+                "Faça mais do que te faz feliz.",
+                "A vida sorri para quem sorri para ela.",
+                "Você é especial e o mundo sabe disso.",
+                "Sua presença é um presente.",
+                "Abra os braços para as coisas boas.",
+                "O melhor ainda está por vir!"
+            ],
+            triste: [
+                "Isso também passará. Seja forte.",
+                "Dias nublados são necessários para as flores crescerem.",
+                "Não há problema em não estar bem o tempo todo.",
+                "Respire fundo. Amanhã é um novo dia.",
+                "Sua dor de hoje será sua força de amanhã.",
+                "Você é maior que seus problemas.",
+                "O choro pode durar uma noite, mas a alegria vem pela manhã.",
+                "Não desista, você é capaz de superar.",
+                "Tudo tem o seu tempo, tenha paciência.",
+                "Abrace a sua vulnerabilidade, ela te faz humano.",
+                "Encontre conforto nas pequenas coisas.",
+                "Você não está sozinho nessa jornada.",
+                "Acredite, dias melhores virão.",
+                "Seja gentil consigo mesmo hoje.",
+                "Permita-se sentir, mas não se permita desistir.",
+                "A esperança é a última que morre.",
+                "Tudo vai ficar bem, acredite.",
+                "Você é amado e importante.",
+                "A tempestade vai passar e o sol vai brilhar.",
+                "Não perca a fé em si mesmo.",
+                "Suas cicatrizes são marcas de superação.",
+                "Você é mais forte do que imagina.",
+                "Depois da chuva, sempre vem o arco-íris.",
+                "Um dia de cada vez.",
+                "Não se cobre tanto.",
+                "O mundo dá voltas e a sua hora vai chegar.",
+                "Transforme sua dor em aprendizado.",
+                "Você tem uma força interior incrível.",
+                "Não deixe que a tristeza apague seu brilho.",
+                "Olhe para o céu e lembre-se da imensidão da vida.",
+                "Você já superou 100% dos seus dias ruins.",
+                "Acalme seu coração, a paz virá.",
+                "Seja seu próprio melhor amigo agora.",
+                "Lembre-se de quem você é e do que é capaz.",
+                "A vida é feita de ciclos, este vai passar.",
+                "Mantenha a cabeça erguida.",
+                "Você é precioso(a).",
+                "O universo tem planos lindos para você.",
+                "Não tenha medo de recomeçar.",
+                "A cura vem com o tempo e o amor próprio."
+            ],
+            motivado: [
+                "O único limite é aquele que você impõe a si mesmo.",
+                "Foguete não tem ré! Vai com tudo.",
+                "Transforme sonhos em metas.",
+                "O sucesso é a soma de pequenos esforços diários.",
+                "Você não chegou até aqui para desistir agora.",
+                "Acredite no seu potencial ilimitado.",
+                "A persistência é o caminho do êxito.",
+                "Cada passo te aproxima do seu objetivo.",
+                "Não espere por oportunidades, crie-as.",
+                "O futuro pertence àqueles que acreditam na beleza de seus sonhos.",
+                "Seja a mudança que você quer ver no mundo.",
+                "O trabalho duro vence o talento quando o talento não trabalha duro.",
+                "Você é capaz de coisas incríveis.",
+                "Não tenha medo de falhar, tenha medo de não tentar.",
+                "Sua determinação é sua maior força.",
+                "Faça hoje o que seu 'eu' do futuro vai agradecer.",
+                "O sucesso começa fora da sua zona de conforto.",
+                "Sonhe grande e ouse falhar.",
+                "A jornada de mil milhas começa com um único passo.",
+                "Você é o arquiteto do seu próprio destino.",
+                "Seus sonhos não têm data de validade.",
+                "A disciplina é a ponte entre metas e realizações.",
+                "Não pare até se orgulhar de si mesmo.",
+                "Obstáculos são degraus para o sucesso.",
+                "Acredite que você pode, e você já está no meio do caminho.",
+                "Grandes coisas nunca vêm de zonas de conforto.",
+                "O impossível é apenas uma opinião.",
+                "Você é mais forte do que as suas desculpas.",
+                "Concentre-se no progresso, não na perfeição.",
+                "Se você pode sonhar, você pode realizar.",
+                "Não deixe para amanhã o que você pode conquistar hoje.",
+                "Sua única competição é você mesmo.",
+                "Transforme o 'não posso' em 'eu vou'.",
+                "O fracasso é apenas uma oportunidade para recomeçar com mais inteligência.",
+                "Ação é a chave fundamental para todo o sucesso.",
+                "Você nasceu para brilhar.",
+                "Mantenha o foco no objetivo.",
+                "A coragem não é a ausência do medo, é a persistência apesar dele.",
+                "Faça acontecer!",
+                "Seu potencial é infinito."
+            ],
+            cansado: [
+                "Descansar não é desistir. É recarregar.",
+                "Respeite o ritmo do seu corpo hoje.",
+                "Aprenda a dizer não e priorize sua paz.",
+                "Uma mente cansada não toma boas decisões.",
+                "Desconecte para se reconectar.",
+                "O mundo pode esperar enquanto você recarrega as energias.",
+                "Faça uma pausa, respire e relaxe.",
+                "Não se culpe por precisar de descanso.",
+                "Seu bem-estar deve ser sua prioridade.",
+                "Amanhã você tentará de novo com mais força.",
+                "O descanso é parte essencial do sucesso.",
+                "Permita-se parar e apenas ser.",
+                "Recarregue as baterias para voltar mais forte.",
+                "A calma é a chave para a clareza.",
+                "Dê a si mesmo o presente do silêncio.",
+                "Respire fundo e solte o peso dos ombros.",
+                "Tudo flui melhor quando você está descansado.",
+                "A paz interior é o novo sucesso.",
+                "Cuide de você com carinho.",
+                "O descanso renova a alma.",
+                "Às vezes, a coisa mais produtiva a fazer é relaxar.",
+                "Não carregue o mundo nas costas.",
+                "Sua saúde mental importa.",
+                "Durma o sono dos justos.",
+                "Desacelere, não é uma corrida.",
+                "Ouça o que seu corpo está pedindo.",
+                "Você fez o suficiente por hoje.",
+                "Acalme a mente e o coração.",
+                "Um passo de cada vez, no seu tempo.",
+                "Não há pressa, apenas processo.",
+                "Relaxe, nada está sob controle.",
+                "Faça algo que te relaxe hoje.",
+                "A natureza não floresce o ano todo, nem você.",
+                "Respeite seus limites.",
+                "Tire um tempo só para você.",
+                "Desligue o modo 'fazer' e ligue o modo 'ser'.",
+                "A exaustão não é um troféu.",
+                "Se cuide para poder cuidar.",
+                "Hoje, permita-se o ócio criativo.",
+                "Renove suas energias, o amanhã te espera."
+            ],
+            ansioso: [
+                "Um passo de cada vez. Foque no agora.",
+                "Você está seguro. Respire.",
+                "Não sofra pelo futuro, viva o presente.",
+                "Controle o que pode, aceite o que não pode.",
+                "Sua mente está mentindo, você vai conseguir.",
+                "Acalme seu coração, tudo se ajeita.",
+                "Respire fundo, expire a preocupação.",
+                "Você já superou 100% dos seus piores dias.",
+                "O agora é o único momento que existe.",
+                "Confie no processo da vida.",
+                "Não deixe o medo te paralisar.",
+                "Você é mais forte do que a sua ansiedade.",
+                "Encontre a paz no caos.",
+                "Seja gentil com a sua mente.",
+                "A ansiedade não define quem você é.",
+                "Foque na sua respiração e encontre o equilíbrio.",
+                "Tudo vai se resolver da melhor forma.",
+                "Acalme-se, você está fazendo o seu melhor.",
+                "Liberte-se da necessidade de controlar tudo.",
+                "A paz começa quando a expectativa termina.",
+                "Não acredite em tudo que você pensa.",
+                "Inspire coragem, expire medo.",
+                "Isso é apenas um momento, não a sua vida toda.",
+                "Você está exatamente onde deveria estar.",
+                "Solte o peso do 'e se'.",
+                "Aterre-se no momento presente.",
+                "Sinta seus pés no chão e respire.",
+                "Você tem recursos para lidar com isso.",
+                "Abrace a incerteza.",
+                "O futuro cuidará de si mesmo.",
+                "Concentre-se naquilo que está ao seu alcance.",
+                "Aquiete a mente e a alma falará.",
+                "Você é suficiente.",
+                "Não antecipe problemas que talvez nunca aconteçam.",
+                "Sua paz vale mais do que qualquer preocupação.",
+                "Dê tempo ao tempo.",
+                "Tudo passa, inclusive essa sensação.",
+                "Confie na sua jornada.",
+                "Você está seguro, aqui e agora.",
+                "Respire. Vai ficar tudo bem."
+            ]
+        };
+
+        // --- ESTADO GLOBAL DO APP ---
+        let currentAuthUser = null; 
+        let currentPlayerName = null; 
+        let selectedEmotion = null;
+        let offlineMode = false; // Novo: Permite jogar sem banco de dados
+
+        const screens = {
+            login: document.getElementById('loginScreen'),
+            emotion: document.getElementById('emotionScreen'),
+            cookie: document.getElementById('cookieScreen'),
+            result: document.getElementById('resultScreen'),
+            loading: document.getElementById('loading')
+        };
+        const authForm = document.getElementById('authForm');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const quoteText = document.getElementById('quoteText');
+        const replayBtn = document.getElementById('replayBtn');
+        const displayUserName = document.getElementById('displayUserName');
+        const offlineBadge = document.getElementById('offlineBadge');
+
+        function showScreen(screenName) {
+            Object.values(screens).forEach(el => el.classList.add('hidden'));
+            screens[screenName].classList.remove('hidden');
+            if (screenName === 'login') {
+                logoutBtn.classList.add('hidden');
+            } else {
+                logoutBtn.classList.remove('hidden');
+            }
+        }
+
+        // --- LÓGICA DE JOGO ---
+        
+        async function checkGameStatus(playerName) {
+            screens.loading.classList.remove('hidden');
+            
+            // SE TIVER OFFLINE, PULA DIREITO
+            if (offlineMode) {
+                showScreen('emotion');
+                screens.loading.classList.add('hidden');
+                return;
+            }
+
+            try {
+                const safeName = playerName.trim().toLowerCase().replace(/\s+/g, '_');
+                const userRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', safeName);
+                
+                const docSnap = await getDoc(userRef);
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    
+                    if (!data.lastPlayed) {
+                        showScreen('emotion');
+                        screens.loading.classList.add('hidden');
+                        return;
+                    }
+
+                    const lastDate = data.lastPlayed.toDate();
+                    const now = new Date();
+                    const isNewDay = lastDate.getDate() !== now.getDate() || 
+                                     lastDate.getMonth() !== now.getMonth() || 
+                                     lastDate.getFullYear() !== now.getFullYear();
+                    const msDiff = now - lastDate;
+                    const hoursDiff = msDiff / (1000 * 60 * 60);
+                    const passed12Hours = hoursDiff >= 12;
+
+                    if (isNewDay) {
+                        showScreen('emotion');
+                    } else if (passed12Hours) {
+                        quoteText.innerText = `"${data.lastQuote}"`;
+                        replayBtn.classList.remove('hidden');
+                        showScreen('result');
+                    } else {
+                        quoteText.innerText = `"${data.lastQuote}"`;
+                        replayBtn.classList.add('hidden');
+                        showScreen('result');
+                    }
+                } else {
+                    await setDoc(userRef, {
+                        originalName: playerName,
+                        createdAt: Timestamp.now(),
+                        seenQuotes: []
+                    });
+                    showScreen('emotion');
+                }
+            } catch (error) {
+                console.error("Erro ao conectar, ativando modo offline:", error);
+                
+                // MODO OFFLINE AUTOMÁTICO
+                offlineMode = true;
+                offlineBadge.classList.remove('hidden'); // Mostra aviso
+                alert("Atenção: Não conseguimos conectar ao banco de dados (Erro de Regras ou Internet). Você jogará no Modo Offline (as frases funcionarão, mas o histórico não será salvo).");
+                showScreen('emotion');
+            }
+            screens.loading.classList.add('hidden');
+        }
+
+        window.resetGame = function() {
+            showScreen('emotion');
+        };
+
+        window.selectEmotion = function(emotion) {
+            selectedEmotion = emotion;
+            showScreen('cookie');
+        };
+
+        window.crackCookie = async function() {
+            if (!currentPlayerName || !selectedEmotion) return;
+            
+            const cookieEl = document.getElementById('cookieWrapper');
+            cookieEl.classList.add('cracking'); 
+            
+            setTimeout(async () => {
+                await processQuote();
+            }, 800);
+        };
+
+        // Função para pegar frases
+        async function getQuotesFromDB(emotion) {
+            // Se estiver offline, retorna o backup direto
+            if (offlineMode) return INITIAL_DB_DATA[emotion];
+
+            const quotesRef = doc(db, 'artifacts', appId, 'public', 'data', 'quotes_db');
+            try {
+                const docSnap = await getDoc(quotesRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    return data[emotion] || [];
+                } else {
+                    await setDoc(quotesRef, INITIAL_DB_DATA);
+                    return INITIAL_DB_DATA[emotion];
+                }
+            } catch (e) {
+                return INITIAL_DB_DATA[emotion];
+            }
+        }
+
+        async function processQuote() {
+            screens.loading.classList.remove('hidden');
+            
+            // --- FLUXO DO MODO OFFLINE ---
+            if (offlineMode) {
+                const categoryQuotes = INITIAL_DB_DATA[selectedEmotion];
+                const finalQuote = categoryQuotes[Math.floor(Math.random() * categoryQuotes.length)];
+                
+                quoteText.innerText = `"${finalQuote}"`;
+                replayBtn.classList.add('hidden');
+                showScreen('result');
+                document.getElementById('cookieWrapper').classList.remove('cracking');
+                screens.loading.classList.add('hidden');
+                return;
+            }
+
+            // --- FLUXO NORMAL (COM BANCO DE DADOS) ---
+            try {
+                const safeName = currentPlayerName.trim().toLowerCase().replace(/\s+/g, '_');
+                const userRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', safeName);
+                
+                const userSnap = await getDoc(userRef);
+                const userData = userSnap.data();
+                const seenQuotes = userData.seenQuotes || [];
+
+                const categoryQuotes = await getQuotesFromDB(selectedEmotion);
+                const availableQuotes = categoryQuotes.filter(q => !seenQuotes.includes(q));
+
+                let finalQuote = "";
+
+                if (availableQuotes.length === 0) {
+                    if (categoryQuotes.length > 0) {
+                        finalQuote = categoryQuotes[Math.floor(Math.random() * categoryQuotes.length)];
+                    } else {
+                        finalQuote = "Sua sorte está sendo escrita...";
+                    }
+                } else {
+                    finalQuote = availableQuotes[Math.floor(Math.random() * availableQuotes.length)];
+                }
+
+                await updateDoc(userRef, {
+                    lastPlayed: Timestamp.now(),
+                    lastQuote: finalQuote,
+                    lastEmotion: selectedEmotion,
+                    seenQuotes: arrayUnion(finalQuote)
+                });
+
+                quoteText.innerText = `"${finalQuote}"`;
+                replayBtn.classList.add('hidden');
+                showScreen('result');
+
+                document.getElementById('cookieWrapper').classList.remove('cracking');
+
+            } catch (error) {
+                console.error("Erro no processamento, usando fallback:", error);
+                
+                // Fallback de emergência mesmo se falhar no meio
+                offlineMode = true;
+                const backupQuotes = INITIAL_DB_DATA[selectedEmotion];
+                const backupFinal = backupQuotes[Math.floor(Math.random() * backupQuotes.length)];
+                
+                quoteText.innerText = `"${backupFinal}"`;
+                showScreen('result');
+            }
+            screens.loading.classList.add('hidden');
+        }
+
+        // --- AUTH E FLUXO DE ENTRADA ---
+        const initAuth = async () => {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                try {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } catch (e) { console.log("Visitante normal"); }
+            }
+
+            onAuthStateChanged(auth, (user) => {
+                currentAuthUser = user;
+                if (!user) {
+                    signInAnonymously(auth).catch((error) => {
+                        console.error("Erro no login anônimo:", error);
+                        // Mesmo se der erro no login, liberamos a tela para o Modo Offline
+                        offlineMode = true; 
+                        offlineBadge.classList.remove('hidden');
+                    });
+                }
+                showScreen('login');
+                screens.loading.classList.add('hidden');
+            });
+        };
+
+        authForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nameInput = document.getElementById('userName').value;
+            const errorDiv = document.getElementById('authError');
+            const btn = document.getElementById('authBtn');
+            
+            if(nameInput.length < 3) {
+                errorDiv.innerText = "Por favor, digite um nome válido.";
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
+            errorDiv.classList.add('hidden');
+            btn.disabled = true;
+            btn.innerText = "Verificando...";
+
+            if (!currentAuthUser && !offlineMode) {
+                try {
+                    await signInAnonymously(auth);
+                } catch(err) {
+                    // Falha silenciosa para ativar modo offline
+                    offlineMode = true;
+                    offlineBadge.classList.remove('hidden');
+                }
+            }
+
+            currentPlayerName = nameInput;
+            displayUserName.innerText = currentPlayerName;
+            
+            await checkGameStatus(currentPlayerName);
+            
+            btn.disabled = false;
+            btn.innerText = "Entrar";
+        });
+
+        logoutBtn.addEventListener('click', () => {
+            currentPlayerName = null;
+            document.getElementById('userName').value = "";
+            showScreen('login');
+        });
+
+        initAuth();
+
+    </script>
+</body>
+</html>
